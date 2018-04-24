@@ -921,7 +921,8 @@ class Plan(StripeObject):
 
     def __init__(self, id=None, metadata=None, amount=None, product=None,
                  currency=None, interval=None, interval_count=1,
-                 trial_period_days=None,
+                 trial_period_days=None, usage_type='licensed',
+                 billing_scheme=None,
                  # Legacy arguments, before Stripe API 2018-02-05:
                  name=None, statement_descriptor=None,
                  **kwargs):
@@ -942,6 +943,8 @@ class Plan(StripeObject):
             assert type(currency) is str and currency
             assert type(interval) is str
             assert interval in ('day', 'week', 'month', 'year')
+            assert usage_type in ('metered', 'licensed')
+            assert billing_scheme in ('per_unit', 'tiered')
             assert type(interval_count) is int
             if trial_period_days is not None:
                 assert type(trial_period_days) is int
@@ -956,6 +959,7 @@ class Plan(StripeObject):
         # All exceptions must be raised before this point.
         super().__init__(id)
 
+        # self.id = id or None
         self.metadata = metadata or {}
         self.product = product
         self.amount = amount
@@ -963,6 +967,8 @@ class Plan(StripeObject):
         self.interval = interval
         self.interval_count = interval_count
         self.trial_period_days = trial_period_days
+        self.usage_type = usage_type
+        self.billing_scheme = billing_scheme
 
     @property
     def name(self):  # Support Stripe API <= 2018-02-05
@@ -981,7 +987,7 @@ class Product(StripeObject):
     # override it:
     _type = type
 
-    def __init__(self, name=None, type=None, active=True, caption=None,
+    def __init__(self, id=None, name=None, type=None, active=True, caption=None,
                  description=None, attributes=None, shippable=True, url=None,
                  statement_descriptor=None, metadata=None, **kwargs):
         if kwargs:
@@ -991,6 +997,8 @@ class Product(StripeObject):
             assert self._type(name) is str and name
             assert type in ('good', 'service')
             assert self._type(active) is bool
+            if id is not None:
+                assert self._type(id) is str
             if caption is not None:
                 assert self._type(caption) is str
             if description is not None:
@@ -1008,7 +1016,10 @@ class Product(StripeObject):
             raise UserError(400, 'Bad request')
 
         # All exceptions must be raised before this point.
-        super().__init__()
+        if id is not None:
+            super().__init__(id)
+        else:
+            super().__init__()
 
         self.name = name
         self.type = type

@@ -1,0 +1,14 @@
+version: "3"
+
+volumes:
+    teston_dev_db:
+        driver: local
+
+services:
+    localstripe:
+        image: "coderigo/localstripe"
+        build:
+            context: ./
+        hostname: localstripe
+        ports:
+            - "8420:8420"
